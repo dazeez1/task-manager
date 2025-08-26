@@ -1,104 +1,322 @@
-# Task Manager API
+# Task Manager - Full Stack Application
 
-A robust task management API with full CRUD operations, user authentication, and advanced organizational features.
+A modern, full-stack task management application built with Node.js, Express, and vanilla JavaScript. Features session-based authentication, priority-based task management, and a beautiful responsive UI.
 
-## Description
+## 🚀 Features
 
-The Task Manager API provides a complete backend solution for task management applications. It supports user authentication, task organization, collaboration features, and comprehensive filtering capabilities.
+### Authentication System
 
-## Features
+- **User Registration**: Create new accounts with email validation
+- **User Login**: Secure session-based authentication
+- **User Logout**: Proper session termination
+- **Password Security**: Bcrypt hashing for password protection
 
-### Core Functionality
+### Task Management
 
-- Create, read, update, and delete tasks
-- Task categorization with custom labels
-- Priority levels (Low/Medium/High/Urgent)
-- Due date tracking with reminders
-- Task progress tracking (Not Started/In Progress/Completed)
+- **Create Tasks**: Add new tasks with title, description, priority, and due date
+- **Read Tasks**: View all user tasks with real-time statistics
+- **Update Tasks**: Edit existing tasks or mark them as complete/incomplete
+- **Delete Tasks**: Remove tasks from the system
+- **Priority System**: Three priority levels (Low, Medium, High) with color coding
+- **Task Status**: Mark tasks as completed or pending
 
-### User Management
+### User Interface
 
-- JWT authentication system
-- User profile customization
-- Role-based access control
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Modern UI**: Clean, intuitive interface with smooth animations
+- **Priority Color Coding**:
+  - 🟢 **Low Priority**: Green
+  - 🟡 **Medium Priority**: Orange/Yellow
+  - 🔴 **High Priority**: Red
+- **Real-time Statistics**: Track total, completed, and pending tasks
+- **Form Validation**: Client-side and server-side validation
 
-### Advanced Features
+## 🛠️ Technology Stack
 
-- Full-text search across tasks
-- Filtering by status, priority, and due date
-- Task sharing between users
-- Activity history logging
-- File attachments support
+### Backend
 
-## Installation & Usage
+- **Node.js**: JavaScript runtime
+- **Express.js**: Web application framework
+- **express-session**: Session management
+- **bcryptjs**: Password hashing
+- **uuid**: Unique ID generation
+- **CORS**: Cross-origin resource sharing
+
+### Frontend
+
+- **Vanilla JavaScript**: No frameworks, pure JS
+- **HTML5**: Semantic markup
+- **CSS3**: Modern styling with gradients and animations
+- **Fetch API**: HTTP requests
+
+### Data Storage
+
+- **JSON Files**: Simple file-based storage
+  - `users.json`: User account data
+  - `tasks.json`: Task data
+
+## 📁 Project Structure
+
+```
+task-manager/
+├── backend/
+│   ├── routes/
+│   │   ├── authRoutes.js      # Authentication routes
+│   │   └── taskRoutes.js      # Task management routes
+│   ├── middleware/
+│   │   └── authMiddleware.js  # Authentication middleware
+│   ├── utils/
+│   │   └── dataManager.js     # JSON file operations
+│   ├── users.json             # User data storage
+│   ├── tasks.json             # Task data storage
+│   ├── package.json           # Backend dependencies
+│   └── server.js              # Express server
+├── frontend/
+│   ├── index.html             # Login/Signup page
+│   ├── dashboard.html         # Task management dashboard
+│   └── script.js              # Frontend JavaScript
+└── README.md                  # Project documentation
+```
+
+## 🚀 Installation & Setup
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- MongoDB (v6.0 or higher)
-- npm (v9 or higher)
+- Node.js (v14 or higher)
+- npm (v6 or higher)
 
-### Installation
+### Step 1: Clone the Repository
 
-1. Clone the repository:
-
-````bash
-git clone https://github.com/yourusername/task-manager.git
+```bash
+git clone <repository-url>
 cd task-manager
+```
 
-### Prerequisites
+### Step 2: Install Backend Dependencies
 
-- Node.js (v16 or higher)
-- MongoDB (v4.4 or higher)
-- npm (v8 or higher)
+```bash
+cd backend
+npm install
+```
 
-### Installation
+### Step 3: Start the Backend Server
 
-1. Clone the repository:
+```bash
+npm start
+# or for development with auto-restart
+npm run dev
+```
+
+The backend server will start on `http://localhost:3000`
+
+### Step 4: Start the Frontend (Optional)
+
+If you want to serve the frontend separately:
+
+```bash
+# Install live-server globally (if not already installed)
+npm install -g live-server
+
+# Start frontend server
+cd frontend
+live-server --port=5500
+```
+
+The frontend will be available at `http://localhost:5500`
+
+### Step 5: Access the Application
+
+- **Main Application**: `http://localhost:3000`
+- **Login Page**: `http://localhost:3000`
+- **Dashboard**: `http://localhost:3000/dashboard`
+
+## 📖 API Documentation
+
+### Authentication Endpoints
+
+#### POST `/api/auth/signup`
+
+Register a new user account.
+
+**Request Body:**
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "emailAddress": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "user": {
+    "userId": "uuid",
+    "firstName": "John",
+    "lastName": "Doe",
+    "emailAddress": "john@example.com",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### POST `/api/auth/login`
+
+Authenticate user and start session.
+
+**Request Body:**
+
+```json
+{
+  "emailAddress": "john@example.com",
+  "password": "password123"
+}
+```
+
+#### POST `/api/auth/logout`
+
+End user session.
+
+#### GET `/api/auth/me`
+
+Get current user information.
+
+### Task Management Endpoints
+
+#### GET `/api/tasks`
+
+Get all tasks for the authenticated user.
+
+#### POST `/api/tasks`
+
+Create a new task.
+
+**Request Body:**
+
+```json
+{
+  "taskTitle": "Complete Project",
+  "taskDescription": "Finish the task manager application",
+  "priorityLevel": "High",
+  "dueDate": "2024-01-15T10:00:00.000Z"
+}
+```
+
+#### PUT `/api/tasks/:taskId`
+
+Update an existing task.
+
+#### DELETE `/api/tasks/:taskId`
+
+Delete a task.
+
+#### PATCH `/api/tasks/:taskId/toggle`
+
+Toggle task completion status.
+
+## 🎨 UI Features
+
+### Priority Color Coding
+
+- **Low Priority**: Green background (`#d4edda`) with dark green text (`#155724`)
+- **Medium Priority**: Yellow background (`#fff3cd`) with dark yellow text (`#856404`)
+- **High Priority**: Red background (`#f8d7da`) with dark red text (`#721c24`)
+
+### Responsive Design
+
+- Mobile-first approach
+- Flexible grid layouts
+- Touch-friendly buttons
+- Optimized for all screen sizes
+
+### User Experience
+
+- Smooth animations and transitions
+- Loading states for better feedback
+- Error and success message handling
+- Form validation with helpful error messages
+
+## 🔒 Security Features
+
+- **Password Hashing**: Bcrypt with salt rounds
+- **Session Management**: Secure session handling
+- **Input Validation**: Both client and server-side validation
+- **XSS Protection**: HTML escaping for user input
+- **CSRF Protection**: Session-based authentication
+
+## 🧪 Testing the Application
+
+1. **Start the backend server**:
 
    ```bash
-   git clone https://github.com/yourusername/taskmanager.git
-   cd taskmanager
-````
+   cd backend
+   npm start
+   ```
 
-2. Install dependencies:
+2. **Open your browser** and navigate to `http://localhost:3000`
+
+3. **Create a new account** or login with existing credentials
+
+4. **Test the features**:
+   - Create tasks with different priorities
+   - Edit task details
+   - Mark tasks as complete/incomplete
+   - Delete tasks
+   - Check the statistics dashboard
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Port already in use**:
 
    ```bash
-   npm install
+   # Kill process using port 3000
+   lsof -ti:3000 | xargs kill -9
    ```
 
-3. Create a `.env` file in the root directory:
+2. **CORS errors**:
 
-   ```env
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/taskmanager
-   JWT_SECRET=your_secure_jwt_secret_here
-   JWT_EXPIRES_IN=30d
-   EMAIL_HOST=smtp.example.com  # For notifications
-   EMAIL_PORT=587
-   EMAIL_USERNAME=your@email.com
-   EMAIL_PASSWORD=your_email_password
-   ```
+   - Ensure the frontend is served from the correct origin
+   - Check the CORS configuration in `server.js`
 
-4. Start the development server:
+3. **Session not persisting**:
+   - Check browser cookie settings
+   - Ensure `credentials: 'include'` is set in fetch requests
 
-   ```bash
-   npm run dev
-   ```
+## 📝 Development Notes
 
-5. Open your browser and navigate to `http://localhost:5000`
+### Code Quality
 
-## Technologies Used
+- **Human-like naming**: Descriptive variable and function names
+- **Best practices**: Proper error handling, validation, and security
+- **Clean code**: Well-structured, readable, and maintainable
+- **Modular design**: Separated concerns and reusable components
 
-- **Backend**: Node.js with Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: JWT with bcrypt
-- **File Upload**: Multer
-- **Email notifications**: Nodemailer
-- **Testing**: Jest, Socket.IO Client for testing
+### Future Enhancements
 
-## Author
+- Database integration (MongoDB/PostgreSQL)
+- JWT authentication
+- Real-time updates with WebSocket
+- File attachments for tasks
+- Task categories and tags
+- Advanced filtering and search
+- Email notifications
+- Mobile app development
 
-**Name**
+## 👨‍💻 Author
 
-- Name: Azeez Damilare Gbenga
+**Azeez Damilare Gbenga**
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+---
+
+**Happy Task Managing! 🎉**
