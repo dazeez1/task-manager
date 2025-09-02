@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
-const path = require('path');
 const bodyParser = require('body-parser');
 
 // Import routes
@@ -15,18 +14,9 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'task-manager-secret-key-2024';
 
-// CORS configuration
+// CORS configuration - allow all origins for API-only deployment
 const corsOptions = {
-  origin: isProduction 
-    ? [process.env.CORS_ORIGIN || 'https://task-manager-api.onrender.com']
-    : [
-        "http://localhost:3000",
-        "http://localhost:5500",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5500",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-      ],
+  origin: process.env.CORS_ORIGIN === "*" ? true : process.env.CORS_ORIGIN,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -53,49 +43,59 @@ app.use(
   })
 );
 
-// Serve static files from frontend directory
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// API routes
+// API routes only
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
-
-// Frontend routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
-});
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    service: 'Task Manager API',
+    version: '2.0.0'
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// API info endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Task Manager API',
+    version: '2.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      tasks: '/api/tasks',
+      health: '/health'
+    },
+    documentation: 'https://github.com/dazeez1/task-manager'
+  });
+});
+
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
+    error: 'API endpoint not found',
+    path: req.originalUrl,
+    availableEndpoints: ['/api/auth', '/api/tasks']
+  });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ 
-    message: isProduction ? 'Internal server error' : err.message 
+    error: isProduction ? 'Internal server error' : err.message,
+    timestamp: new Date().toISOString()
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Task Manager Server running on port ${PORT}`);
+  console.log(`🚀 Task Manager API Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Server URL: http://localhost:${PORT}`);
+  console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
   if (isProduction) {
     console.log(`🚀 Production mode enabled`);
+    console.log(`📚 API-only deployment - no frontend files served`);
   }
 });

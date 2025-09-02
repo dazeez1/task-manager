@@ -13,6 +13,6 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://task-manager-api.onrender.com
-    healthCheckPath: /api/auth/me
+        value: "*"
+    healthCheckPath: /health
     autoDeploy: true

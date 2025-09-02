@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "task-manager-api-collection",
 		"name": "Task Manager API",
-		"description": "Complete API collection for the Task Manager application with authentication and task management endpoints. Supports both local development and production environments.",
+		"description": "Complete API collection for the Task Manager backend API. This collection tests the API endpoints that will be hosted on Render. Frontend pages are hosted separately.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "task-manager-api"
 	},
@@ -255,10 +255,10 @@
 			"description": "Task management endpoints for CRUD operations on user tasks."
 		},
 		{
-			"name": "Frontend Pages",
+			"name": "API Information & Health",
 			"item": [
 				{
-					"name": "Login Page",
+					"name": "API Information",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -271,34 +271,10 @@
 								""
 							]
 						},
-						"description": "Get the login/signup page HTML."
+						"description": "Get API information and available endpoints."
 					},
 					"response": []
 				},
-				{
-					"name": "Dashboard Page",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/dashboard",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"dashboard"
-							]
-						},
-						"description": "Get the task management dashboard HTML. Requires authentication."
-					},
-					"response": []
-				}
-			],
-			"description": "Frontend page endpoints for accessing the web interface."
-		},
-		{
-			"name": "Health & Monitoring",
-			"item": [
 				{
 					"name": "Health Check",
 					"request": {
@@ -318,7 +294,7 @@
 					"response": []
 				}
 			],
-			"description": "Health and monitoring endpoints for production deployment."
+			"description": "API information and health monitoring endpoints."
 		}
 	],
 	"event": [
@@ -334,7 +310,8 @@
 					"",
 					"// Log current environment",
 					"console.log('🌍 Testing against:', pm.environment.get('baseUrl'));",
-					"console.log('🔗 Environment:', pm.environment.name);"
+					"console.log('🔗 Environment:', pm.environment.name);",
+					"console.log('📚 Note: This collection tests the API only. Frontend is hosted separately.');"
 				]
 			}
 		}
