@@ -418,7 +418,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Task Manager API Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-  console.log(`🌐 CORS Origins: ${corsOptions.origin.join(", ")}`);
+  console.log(`🌐 CORS Origins: https://task-manager-rho-virid.vercel.app, http://localhost:3000, http://localhost:5500`);
   if (isProduction) {
     console.log(`🚀 Production mode enabled`);
     console.log(`📚 API-only deployment - no frontend files served`);
