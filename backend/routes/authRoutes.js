@@ -9,6 +9,10 @@ const router = express.Router();
 // POST /signup - Register new user
 router.post("/signup", requireNoAuthentication, async (req, res) => {
   try {
+    console.log("📝 SIGNUP ATTEMPT - Email:", emailAddress);
+    console.log("📝 Request Body:", req.body);
+    console.log("📝 Session before signup:", req.session);
+    
     const { firstName, lastName, emailAddress, password } = req.body;
 
     // Validate input fields
@@ -86,6 +90,10 @@ router.post("/signup", requireNoAuthentication, async (req, res) => {
 // POST /login - Authenticate user and start session
 router.post("/login", requireNoAuthentication, async (req, res) => {
   try {
+    console.log("🔑 LOGIN ATTEMPT - Email:", emailAddress);
+    console.log("🔑 Request Body:", req.body);
+    console.log("🔑 Session before login:", req.session);
+    
     const { emailAddress, password } = req.body;
 
     // Validate input fields
@@ -116,6 +124,9 @@ router.post("/login", requireNoAuthentication, async (req, res) => {
 
     // Start session
     req.session.userId = user.userId;
+    console.log("Session started for user:", user.userId);
+    console.log("Session ID:", req.sessionID);
+    console.log("Session data after setting userId:", req.session);
 
     // Return user data (without password)
     const { password: _, ...userData } = user;
@@ -163,7 +174,13 @@ router.post("/logout", (req, res) => {
 // GET /me - Get current user info
 router.get("/me", (req, res) => {
   try {
+    console.log("Auth /me route called");
+    console.log("Session ID:", req.sessionID);
+    console.log("Session data:", req.session);
+    console.log("User ID from session:", req.session.userId);
+
     if (!req.session.userId) {
+      console.log("No userId in session - redirecting to login");
       return res.status(401).json({
         success: false,
         message: "Not authenticated",
