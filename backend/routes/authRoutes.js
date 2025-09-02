@@ -52,13 +52,42 @@ router.post("/login", allowAll, (req, res) => {
     // Set session (if available)
     if (req.session) {
       req.session.userId = user.userId;
-      console.log("🔑 Session set:", req.session.userId);
+      req.session.email = user.emailAddress;
+      req.session.firstName = user.firstName;
+      req.session.lastName = user.lastName;
+      console.log("🔑 Session set:", user.userId);
+      console.log("🔑 Session data:", req.session);
     }
     
-    res.json({
-      success: true,
-      message: "Login successful (simple)",
-      user: user
+    // Force session save and set cookie
+    req.session.save((err) => {
+      if (err) {
+        console.error("❌ Session save error:", err);
+        return res.status(500).json({ 
+          success: false,
+          message: "Failed to save session" 
+        });
+      }
+
+      // Explicitly set the session cookie
+      res.cookie('task-manager-session', req.sessionID, {
+        httpOnly: false,
+        secure: false,
+        sameSite: 'none',
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+
+      console.log("✅ Session saved and cookie set");
+      console.log("🍪 Cookie being set:", req.sessionID);
+
+      res.json({
+        success: true,
+        message: "Login successful (simple)",
+        user: user,
+        sessionId: req.sessionID,
+        cookieSet: true
+      });
     });
   } catch (error) {
     console.error("Simple login error:", error);
@@ -93,20 +122,47 @@ router.post("/logout", allowAll, (req, res) => {
 router.get("/me", allowAll, (req, res) => {
   try {
     console.log("🔍 SIMPLE /me called");
+    console.log("🔍 Session ID:", req.sessionID);
+    console.log("🔍 Session data:", req.session);
+    console.log("🔍 Cookies in request:", req.headers.cookie);
     
-    // Return a default user for any request
-    const user = {
-      userId: req.session?.userId || "default-user-123",
-      firstName: "Default",
-      lastName: "User",
-      emailAddress: "default@example.com",
-      createdAt: new Date().toISOString()
-    };
-    
-    res.json({
-      success: true,
-      user: user
-    });
+    // Check if we have a valid session
+    if (req.session && req.session.userId) {
+      console.log("✅ Valid session found:", req.session.userId);
+      
+      const user = {
+        userId: req.session.userId,
+        firstName: req.session.firstName || "User",
+        lastName: req.session.lastName || "Name",
+        emailAddress: req.session.email || "user@example.com",
+        createdAt: new Date().toISOString()
+      };
+      
+      res.json({
+        success: true,
+        user: user,
+        sessionValid: true,
+        sessionId: req.sessionID
+      });
+    } else {
+      console.log("❌ No valid session found, returning default user");
+      
+      // Return a default user for any request
+      const user = {
+        userId: "default-user-123",
+        firstName: "Default",
+        lastName: "User",
+        emailAddress: "default@example.com",
+        createdAt: new Date().toISOString()
+      };
+      
+      res.json({
+        success: true,
+        user: user,
+        sessionValid: false,
+        sessionId: req.sessionID
+      });
+    }
   } catch (error) {
     console.error("Simple /me error:", error);
     res.status(500).json({
