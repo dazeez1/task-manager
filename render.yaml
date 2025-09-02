@@ -16,3 +16,16 @@ services:
         value: "*"
     healthCheckPath: /health
     autoDeploy: true
+
+  - type: web
+    name: task-manager-frontend
+    env: static
+    plan: free
+    buildCommand: echo "Frontend files ready"
+    startCommand: echo "Static site deployed"
+    staticPublishPath: ./frontend
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true
