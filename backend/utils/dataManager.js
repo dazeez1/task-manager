@@ -5,31 +5,57 @@ class DataManager {
   constructor() {
     this.usersFilePath = path.join(__dirname, "../users.json");
     this.tasksFilePath = path.join(__dirname, "../tasks.json");
+
+    console.log(`🏗️ DataManager initialized`);
+    console.log(`🏗️ Users file path: ${this.usersFilePath}`);
+    console.log(`🏗️ Tasks file path: ${this.tasksFilePath}`);
+    console.log(`🏗️ Current directory: ${__dirname}`);
+    console.log(`🏗️ Parent directory: ${path.dirname(__dirname)}`);
   }
 
   // Read data from JSON file
   readDataFromFile(filePath) {
     try {
+      console.log(`📁 Attempting to read file: ${filePath}`);
       const fileContent = fs.readFileSync(filePath, "utf8");
-      return JSON.parse(fileContent);
+      console.log(`📁 File content length: ${fileContent.length} characters`);
+      const data = JSON.parse(fileContent);
+      console.log(
+        `📁 Successfully read ${
+          Array.isArray(data) ? data.length : "data"
+        } from ${filePath}`
+      );
+      return data;
     } catch (error) {
+      console.error(`❌ Error reading file ${filePath}:`, error);
       if (error.code === "ENOENT") {
-        // File doesn't exist, return empty array
+        console.log(
+          `📁 File doesn't exist: ${filePath}, returning empty array`
+        );
         return [];
       }
-      console.error(`Error reading file ${filePath}:`, error);
-      throw new Error("Failed to read data file");
+      throw new Error(`Failed to read data file: ${error.message}`);
     }
   }
 
   // Write data to JSON file
   writeDataToFile(filePath, data) {
     try {
-      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+      console.log(`📝 Attempting to write to file: ${filePath}`);
+      console.log(`📝 Data to write:`, data);
+      const jsonData = JSON.stringify(data, null, 2);
+      console.log(`📝 JSON string length: ${jsonData.length} characters`);
+      fs.writeFileSync(filePath, jsonData, "utf8");
+      console.log(`📝 Successfully wrote to file: ${filePath}`);
       return true;
     } catch (error) {
-      console.error(`Error writing to file ${filePath}:`, error);
-      throw new Error("Failed to write data file");
+      console.error(`❌ Error writing to file ${filePath}:`, error);
+      console.error(`❌ Error details:`, {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+      });
+      throw new Error(`Failed to write data file: ${error.message}`);
     }
   }
 

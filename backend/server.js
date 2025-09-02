@@ -37,8 +37,8 @@ app.options("*", cors(corsOptions));
 app.use((req, res, next) => {
   console.log(`📥 ${new Date().toISOString()} - ${req.method} ${req.url}`);
   console.log(`📥 Origin: ${req.headers.origin}`);
-  console.log(`📥 User-Agent: ${req.headers['user-agent']}`);
-  console.log(`📥 Cookie: ${req.headers.cookie || 'No cookies'}`);
+  console.log(`📥 User-Agent: ${req.headers["user-agent"]}`);
+  console.log(`📥 Cookie: ${req.headers.cookie || "No cookies"}`);
   next();
 });
 
@@ -90,18 +90,18 @@ app.get("/api/test-session", (req, res) => {
   console.log("🧪 Session ID:", req.sessionID);
   console.log("🧪 Session Data:", req.session);
   console.log("🧪 Cookies:", req.headers.cookie);
-  
+
   // Set a test value in session
   req.session.testValue = "Session is working!";
   req.session.testTime = new Date().toISOString();
-  
+
   res.json({
     message: "Session test endpoint",
     timestamp: new Date().toISOString(),
     sessionId: req.sessionID,
     sessionData: req.session,
     cookies: req.headers.cookie || "No cookies",
-    testValueSet: req.session.testValue
+    testValueSet: req.session.testValue,
   });
 });
 
@@ -111,12 +111,54 @@ app.use("/api/tasks", taskRoutes);
 
 // Health check endpoint for Render
 app.get("/health", (req, res) => {
+  const fs = require("fs");
+  const path = require("path");
+
+  const usersFilePath = path.join(__dirname, "users.json");
+  const tasksFilePath = path.join(__dirname, "tasks.json");
+
+  const usersFileExists = fs.existsSync(usersFilePath);
+  const tasksFileExists = fs.existsSync(tasksFilePath);
+
+  let usersCount = 0;
+  let tasksCount = 0;
+
+  try {
+    if (usersFileExists) {
+      const users = JSON.parse(fs.readFileSync(usersFilePath, "utf8"));
+      usersCount = Array.isArray(users) ? users.length : 0;
+    }
+  } catch (error) {
+    console.error("Error reading users file:", error);
+  }
+
+  try {
+    if (tasksFileExists) {
+      const tasks = JSON.parse(fs.readFileSync(tasksFilePath, "utf8"));
+      tasksCount = Array.isArray(tasks) ? tasks.length : 0;
+    }
+  } catch (error) {
+    console.error("Error reading tasks file:", error);
+  }
+
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
     service: "Task Manager API",
     version: "2.0.0",
+    files: {
+      users: {
+        exists: usersFileExists,
+        path: usersFilePath,
+        count: usersCount,
+      },
+      tasks: {
+        exists: tasksFileExists,
+        path: tasksFilePath,
+        count: tasksCount,
+      },
+    },
     cors: {
       allowedOrigins: corsOptions.origin,
       credentials: corsOptions.credentials,
@@ -160,12 +202,12 @@ app.use((err, req, res, next) => {
   console.error("🚨 Request URL:", req.url);
   console.error("🚨 Request Method:", req.method);
   console.error("🚨 Request Headers:", req.headers);
-  
+
   res.status(500).json({
     error: isProduction ? "Internal server error" : err.message,
     timestamp: new Date().toISOString(),
     path: req.url,
-    method: req.method
+    method: req.method,
   });
 });
 
