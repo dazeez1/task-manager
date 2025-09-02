@@ -1,49 +1,41 @@
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
-const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const isProduction = process.env.NODE_ENV === "production";
 
-// Simple CORS middleware
+// Body parser
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || "your-secret-key-2024",
+  resave: true,
+  saveUninitialized: true,
+  name: "task-manager-session",
+  cookie: {
+    secure: false,
+    httpOnly: false,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: "none",
+    path: "/"
+  }
+}));
+
+// CORS middleware
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://task-manager-rho-virid.vercel.app");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
   
-  // Handle preflight requests
   if (req.method === "OPTIONS") {
     res.sendStatus(200);
     return;
   }
   
-  next();
-});
-
-// Body parser
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Simple session configuration - NO CORS
-app.use(session({
-  secret: process.env.SESSION_SECRET || "your-secret-key",
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    secure: false,
-    httpOnly: false,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: "lax",
-    path: "/"
-  }
-}));
-
-// Simple request logger
-app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.url} - ${new Date().toISOString()}`);
   next();
 });
 
@@ -56,12 +48,20 @@ app.get("/", (req, res) => {
   });
 });
 
-// Simple authentication routes
+// Test endpoint
+app.get("/api/test", (req, res) => {
+  res.json({
+    message: "API is working",
+    sessionId: req.sessionID,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Authentication routes
 app.post("/api/auth/signup", (req, res) => {
   try {
     const { firstName, lastName, emailAddress } = req.body;
     
-    // Create a simple user
     const user = {
       id: Date.now().toString(),
       firstName: firstName || "User",
@@ -70,12 +70,8 @@ app.post("/api/auth/signup", (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // Set session
     req.session.user = user;
     req.session.isAuthenticated = true;
-
-    console.log("✅ User signed up:", user.emailAddress);
-    console.log("🔐 Session set:", req.sessionID);
 
     res.json({
       success: true,
@@ -83,7 +79,6 @@ app.post("/api/auth/signup", (req, res) => {
       user: user
     });
   } catch (error) {
-    console.error("Signup error:", error);
     res.status(500).json({ success: false, message: "Registration failed" });
   }
 });
@@ -92,7 +87,6 @@ app.post("/api/auth/login", (req, res) => {
   try {
     const { emailAddress, password } = req.body;
     
-    // Create a simple user for any login
     const user = {
       id: Date.now().toString(),
       firstName: "User",
@@ -101,13 +95,8 @@ app.post("/api/auth/login", (req, res) => {
       createdAt: new Date().toISOString()
     };
 
-    // Set session
     req.session.user = user;
     req.session.isAuthenticated = true;
-
-    console.log("✅ User logged in:", user.emailAddress);
-    console.log("🔐 Session set:", req.sessionID);
-    console.log("🍪 Session cookie should be set");
 
     res.json({
       success: true,
@@ -115,61 +104,41 @@ app.post("/api/auth/login", (req, res) => {
       user: user
     });
   } catch (error) {
-    console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Login failed" });
   }
 });
 
 app.post("/api/auth/logout", (req, res) => {
-  try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res.status(500).json({ success: false, message: "Logout failed" });
-      }
-      
-      console.log("✅ User logged out");
-      res.json({ success: true, message: "Logout successful" });
-    });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ success: false, message: "Logout failed" });
-  }
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: "Logout failed" });
+    }
+    res.json({ success: true, message: "Logout successful" });
+  });
 });
 
 app.get("/api/auth/me", (req, res) => {
-  try {
-    console.log("🔍 /me called - Session ID:", req.sessionID);
-    console.log("🔍 Session data:", req.session);
-    
-    if (req.session && req.session.isAuthenticated && req.session.user) {
-      console.log("✅ Valid session found");
-      res.json({
-        success: true,
-        user: req.session.user,
-        isAuthenticated: true
-      });
-    } else {
-      console.log("❌ No valid session");
-      res.json({
-        success: false,
-        message: "Not authenticated",
-        isAuthenticated: false
-      });
-    }
-  } catch (error) {
-    console.error("/me error:", error);
-    res.status(500).json({ success: false, message: "Failed to get user info" });
+  if (req.session && req.session.isAuthenticated && req.session.user) {
+    res.json({
+      success: true,
+      user: req.session.user,
+      isAuthenticated: true
+    });
+  } else {
+    res.json({
+      success: false,
+      message: "Not authenticated",
+      isAuthenticated: false
+    });
   }
 });
 
-// Simple task routes
+// Task routes
 app.get("/api/tasks", (req, res) => {
   if (!req.session || !req.session.isAuthenticated) {
     return res.status(401).json({ success: false, message: "Not authenticated" });
   }
 
-  // Return sample tasks
   const tasks = [
     {
       id: "1",
@@ -184,19 +153,8 @@ app.get("/api/tasks", (req, res) => {
   res.json({ success: true, tasks: tasks });
 });
 
-// Test endpoint
-app.get("/api/test", (req, res) => {
-  res.json({
-    message: "API is working",
-    sessionId: req.sessionID,
-    sessionData: req.session,
-    timestamp: new Date().toISOString()
-  });
-});
-
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${isProduction ? 'Production' : 'Development'}`);
   console.log(`🔗 API URL: http://localhost:${PORT}/api`);
 });
