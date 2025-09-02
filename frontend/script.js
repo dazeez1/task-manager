@@ -18,6 +18,7 @@ const userInfo = document.getElementById('userInfo');
 const statsContainer = document.getElementById('statsContainer');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const taskFormContainer = document.getElementById('taskFormContainer');
+const toggleFormBtn = document.getElementById('toggleFormBtn'); // Added this line
 
 // Utility functions
 function showMessage(message, type = 'info') {
@@ -348,6 +349,23 @@ function editTask(taskId) {
   showMessage('Edit functionality coming soon!', 'info');
 }
 
+// Form toggle functionality
+function toggleForms() {
+  const isLoginVisible = !loginForm.classList.contains('hidden');
+  
+  if (isLoginVisible) {
+    // Switch to signup form
+    loginForm.classList.add('hidden');
+    signupForm.classList.remove('hidden');
+    toggleFormBtn.textContent = 'Already have an account? Login';
+  } else {
+    // Switch to login form
+    signupForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+    toggleFormBtn.textContent = "Don't have an account? Sign up";
+  }
+}
+
 // Event listeners
 if (loginForm) {
   loginForm.addEventListener('submit', handleLogin);
@@ -363,6 +381,10 @@ if (taskForm) {
 
 if (addTaskBtn) {
   addTaskBtn.addEventListener('click', showTaskForm);
+}
+
+if (toggleFormBtn) {
+  toggleFormBtn.addEventListener('click', toggleForms);
 }
 
 // Store original button text for loading states
