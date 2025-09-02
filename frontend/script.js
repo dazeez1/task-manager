@@ -7,25 +7,25 @@ document.addEventListener('DOMContentLoaded', function() {
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const toggleFormBtn = document.getElementById("toggleFormBtn");
-  const loginSection = document.getElementById("loginSection");
-  const signupSection = document.getElementById("signupSection");
 
   // Check if elements exist
-  if (!loginForm || !signupForm || !toggleFormBtn || !loginSection || !signupSection) {
+  if (!loginForm || !signupForm || !toggleFormBtn) {
     console.error("❌ Required DOM elements not found");
     return;
   }
 
   // Toggle between login and signup forms
   function toggleForms() {
-    if (loginSection.style.display === "none") {
-      loginSection.style.display = "block";
-      signupSection.style.display = "none";
-      toggleFormBtn.textContent = "Don't have an account? Sign up";
-    } else {
-      loginSection.style.display = "none";
-      signupSection.style.display = "block";
+    if (signupForm.classList.contains("hidden")) {
+      // Show signup, hide login
+      signupForm.classList.remove("hidden");
+      loginForm.classList.add("hidden");
       toggleFormBtn.textContent = "Already have an account? Login";
+    } else {
+      // Show login, hide signup
+      loginForm.classList.remove("hidden");
+      signupForm.classList.add("hidden");
+      toggleFormBtn.textContent = "Don't have an account? Sign up";
     }
   }
 
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     
     const formData = new FormData(loginForm);
-    const email = formData.get("email");
+    const email = formData.get("emailAddress");
     const password = formData.get("password");
     
     try {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formData = new FormData(signupForm);
     const firstName = formData.get("firstName");
     const lastName = formData.get("lastName");
-    const email = formData.get("email");
+    const email = formData.get("emailAddress");
     
     try {
       console.log("📝 Attempting signup...");
