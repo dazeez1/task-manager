@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "task-manager-api-collection",
 		"name": "Task Manager API",
-		"description": "Complete API collection for the Task Manager application with authentication and task management endpoints.",
+		"description": "Complete API collection for the Task Manager application with authentication and task management endpoints. Supports both local development and production environments.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "task-manager-api"
 	},
@@ -295,6 +295,30 @@
 				}
 			],
 			"description": "Frontend page endpoints for accessing the web interface."
+		},
+		{
+			"name": "Health & Monitoring",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Health check endpoint for monitoring and Render health checks."
+					},
+					"response": []
+				}
+			],
+			"description": "Health and monitoring endpoints for production deployment."
 		}
 	],
 	"event": [
@@ -306,7 +330,11 @@
 					"// Set base URL if not already set",
 					"if (!pm.environment.get('baseUrl')) {",
 					"    pm.environment.set('baseUrl', 'http://localhost:3000');",
-					"}"
+					"}",
+					"",
+					"// Log current environment",
+					"console.log('🌍 Testing against:', pm.environment.get('baseUrl'));",
+					"console.log('🔗 Environment:', pm.environment.name);"
 				]
 			}
 		}

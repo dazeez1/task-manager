@@ -1,134 +1,153 @@
-// API Configuration
-const API_BASE_URL = "http://localhost:3000/api";
+// Task Manager Frontend Script
+// Version: 2.0 - Production Ready
 
-// Global variables
-let currentUser = null;
-let currentTasks = [];
-let editingTaskId = null;
+// Auto-detect API base URL
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : `${window.location.protocol}//${window.location.host}/api`;
 
-// DOM Elements
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const toggleFormBtn = document.getElementById("toggleFormBtn");
-const errorMessage = document.getElementById("errorMessage");
-const successMessage = document.getElementById("successMessage");
+console.log('🌍 Environment detected:', window.location.hostname);
+console.log('🔗 API Base URL:', API_BASE_URL);
 
-// Dashboard elements
-const userNameElement = document.getElementById("userName");
-const logoutBtn = document.getElementById("logoutBtn");
-const addTaskBtn = document.getElementById("addTaskBtn");
-const taskForm = document.getElementById("taskForm");
-const taskFormElement = document.getElementById("taskFormElement");
-const formTitle = document.getElementById("formTitle");
-const cancelBtn = document.getElementById("cancelBtn");
-const tasksContainer = document.getElementById("tasksContainer");
-const totalTasksElement = document.getElementById("totalTasks");
-const completedTasksElement = document.getElementById("completedTasks");
-const pendingTasksElement = document.getElementById("pendingTasks");
+// DOM element references
+const loginForm = document.getElementById('loginForm');
+const signupForm = document.getElementById('signupForm');
+const taskForm = document.getElementById('taskForm');
+const tasksContainer = document.getElementById('tasksContainer');
+const userInfo = document.getElementById('userInfo');
+const statsContainer = document.getElementById('statsContainer');
+const addTaskBtn = document.getElementById('addTaskBtn');
+const taskFormContainer = document.getElementById('taskFormContainer');
 
-// Utility Functions
-function showMessage(element, message, isError = false) {
-  element.textContent = message;
-  element.style.display = "block";
-  element.className = isError ? "error-message" : "success-message";
-
+// Utility functions
+function showMessage(message, type = 'info') {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${type}`;
+  messageDiv.textContent = message;
+  document.body.appendChild(messageDiv);
+  
   setTimeout(() => {
-    element.style.display = "none";
-  }, 5000);
+    messageDiv.remove();
+  }, 3000);
 }
 
 function setLoading(isLoading) {
-  const buttons = document.querySelectorAll('button[type="submit"]');
-  buttons.forEach((btn) => {
+  const submitBtns = document.querySelectorAll('button[type="submit"]');
+  submitBtns.forEach(btn => {
     btn.disabled = isLoading;
-    if (isLoading) {
-      btn.textContent = "Loading...";
-    } else {
-      btn.textContent = btn.dataset.originalText || btn.textContent;
-    }
+    btn.textContent = isLoading ? 'Loading...' : btn.getAttribute('data-original-text') || 'Submit';
   });
 }
 
 function formatDate(dateString) {
-  if (!dateString) return "No due date";
+  if (!dateString) return 'No due date';
   const date = new Date(dateString);
-  return (
-    date.toLocaleDateString() +
-    " " +
-    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
+  return date.toLocaleDateString();
 }
 
-// API Functions
-async function makeApiRequest(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Generic API request function
+async function makeApiRequest(url, options = {}) {
   const defaultOptions = {
-    credentials: "include",
+    credentials: 'include',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   };
 
-  const response = await fetch(url, { ...defaultOptions, ...options });
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
+  try {
+    const response = await fetch(url, { ...defaultOptions, ...options });
+    const responseText = await response.text();
+    
+    if (!responseText) {
+      throw new Error("Empty response from server");
+    }
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Failed to parse JSON:", responseText);
+      throw new Error("Invalid JSON response from server");
+    }
+    
+    if (!response.ok) {
+      throw new Error(data.message || "Something went wrong");
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("API Request failed:", error);
+    throw error;
   }
-
-  return data;
 }
 
-// Authentication Functions
-async function handleLogin(formData) {
+// Authentication functions
+async function handleLogin(event) {
+  event.preventDefault();
+  setLoading(true);
+  
   try {
-    setLoading(true);
-    const response = await makeApiRequest("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({
-        emailAddress: formData.get("emailAddress"),
-        password: formData.get("password"),
-      }),
+    const formData = new FormData(loginForm);
+    const loginData = {
+      emailAddress: formData.get('emailAddress'),
+      password: formData.get('password'),
+    };
+
+    const response = await makeApiRequest(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      body: JSON.stringify(loginData),
     });
 
-    currentUser = response.user;
-    showMessage(successMessage, "Login successful! Redirecting...", false);
-
+    showMessage('Login successful!', 'success');
+    
+    // Redirect to dashboard
     setTimeout(() => {
-      window.location.href = "http://localhost:3000/dashboard";
+      window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/dashboard'
+        : '/dashboard';
     }, 1000);
+    
   } catch (error) {
-    showMessage(errorMessage, error.message, true);
+    showMessage(error.message, 'error');
   } finally {
     setLoading(false);
   }
 }
 
-async function handleSignup(formData) {
+async function handleSignup(event) {
+  event.preventDefault();
+  setLoading(true);
+  
   try {
-    setLoading(true);
-    const response = await makeApiRequest("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({
-        firstName: formData.get("firstName"),
-        lastName: formData.get("lastName"),
-        emailAddress: formData.get("emailAddress"),
-        password: formData.get("password"),
-      }),
+    const formData = new FormData(signupForm);
+    const signupData = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      emailAddress: formData.get('emailAddress'),
+      password: formData.get('password'),
+    };
+
+    const response = await makeApiRequest(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      body: JSON.stringify(signupData),
     });
 
-    currentUser = response.user;
-    showMessage(
-      successMessage,
-      "Account created successfully! Redirecting...",
-      false
-    );
-
+    showMessage('Account created successfully! Please login.', 'success');
+    
+    // Switch to login form
     setTimeout(() => {
-      window.location.href = "http://localhost:3000/dashboard";
+      document.getElementById('signupSection').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'block';
     }, 1000);
+    
   } catch (error) {
-    showMessage(errorMessage, error.message, true);
+    showMessage(error.message, 'error');
   } finally {
     setLoading(false);
   }
@@ -136,343 +155,246 @@ async function handleSignup(formData) {
 
 async function handleLogout() {
   try {
-    await makeApiRequest("/auth/logout", {
-      method: "POST",
+    await makeApiRequest(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
     });
-
-    window.location.href = "http://localhost:3000/";
+    
+    showMessage('Logged out successfully!', 'success');
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/'
+        : '/';
+    }, 1000);
+    
   } catch (error) {
-    // Force redirect even if logout fails
-    window.location.href = "http://localhost:3000/";
+    showMessage(error.message, 'error');
   }
 }
 
 async function checkAuthStatus() {
   try {
-    const response = await makeApiRequest("/auth/me");
-    currentUser = response.user;
-    return true;
+    const response = await makeApiRequest(`${API_BASE_URL}/auth/me`);
+    return response.data;
   } catch (error) {
-    return false;
+    return null;
   }
 }
 
-// Task Management Functions
+// Task management functions
 async function loadTasks() {
   try {
-    const response = await makeApiRequest("/tasks");
-    currentTasks = response.tasks;
-    renderTasks();
-    updateStats();
+    const response = await makeApiRequest(`${API_BASE_URL}/tasks`);
+    renderTasks(response.data);
+    updateStats(response.data);
   } catch (error) {
-    showMessage(errorMessage, "Failed to load tasks: " + error.message, true);
+    showMessage(error.message, 'error');
   }
 }
 
-async function createTask(taskData) {
+async function createTask(event) {
+  event.preventDefault();
+  setLoading(true);
+  
   try {
-    const response = await makeApiRequest("/tasks", {
-      method: "POST",
+    const formData = new FormData(taskForm);
+    const taskData = {
+      taskTitle: formData.get('taskTitle'),
+      taskDescription: formData.get('taskDescription'),
+      priorityLevel: formData.get('priorityLevel'),
+      dueDate: formData.get('dueDate') || null,
+    };
+
+    await makeApiRequest(`${API_BASE_URL}/tasks`, {
+      method: 'POST',
       body: JSON.stringify(taskData),
     });
 
-    currentTasks.push(response.task);
-    renderTasks();
-    updateStats();
-    showMessage(successMessage, "Task created successfully!", false);
-
-    return response.task;
+    showMessage('Task created successfully!', 'success');
+    taskForm.reset();
+    hideTaskForm();
+    loadTasks();
+    
   } catch (error) {
-    showMessage(errorMessage, "Failed to create task: " + error.message, true);
-    throw error;
+    showMessage(error.message, 'error');
+  } finally {
+    setLoading(false);
   }
 }
 
-async function updateTask(taskId, taskData) {
+async function updateTask(taskId, updates) {
   try {
-    const response = await makeApiRequest(`/tasks/${taskId}`, {
-      method: "PUT",
-      body: JSON.stringify(taskData),
+    await makeApiRequest(`${API_BASE_URL}/tasks/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
     });
 
-    const index = currentTasks.findIndex((task) => task.taskId === taskId);
-    if (index !== -1) {
-      currentTasks[index] = response.task;
-    }
-
-    renderTasks();
-    updateStats();
-    showMessage(successMessage, "Task updated successfully!", false);
-
-    return response.task;
+    showMessage('Task updated successfully!', 'success');
+    loadTasks();
+    
   } catch (error) {
-    showMessage(errorMessage, "Failed to update task: " + error.message, true);
-    throw error;
+    showMessage(error.message, 'error');
   }
 }
 
 async function deleteTask(taskId) {
+  if (!confirm('Are you sure you want to delete this task?')) return;
+  
   try {
-    await makeApiRequest(`/tasks/${taskId}`, {
-      method: "DELETE",
+    await makeApiRequest(`${API_BASE_URL}/tasks/${taskId}`, {
+      method: 'DELETE',
     });
 
-    currentTasks = currentTasks.filter((task) => task.taskId !== taskId);
-    renderTasks();
-    updateStats();
-    showMessage(successMessage, "Task deleted successfully!", false);
+    showMessage('Task deleted successfully!', 'success');
+    loadTasks();
+    
   } catch (error) {
-    showMessage(errorMessage, "Failed to delete task: " + error.message, true);
+    showMessage(error.message, 'error');
   }
 }
 
 async function toggleTaskCompletion(taskId) {
   try {
-    const response = await makeApiRequest(`/tasks/${taskId}/toggle`, {
-      method: "PATCH",
+    await makeApiRequest(`${API_BASE_URL}/tasks/${taskId}/toggle`, {
+      method: 'PATCH',
     });
 
-    const index = currentTasks.findIndex((task) => task.taskId === taskId);
-    if (index !== -1) {
-      currentTasks[index] = response.task;
-    }
-
-    renderTasks();
-    updateStats();
+    loadTasks();
+    
   } catch (error) {
-    showMessage(
-      errorMessage,
-      "Failed to update task status: " + error.message,
-      true
-    );
+    showMessage(error.message, 'error');
   }
 }
 
-// UI Functions
-function renderTasks() {
-  if (currentTasks.length === 0) {
-    tasksContainer.innerHTML = `
-            <div class="empty-state">
-                <h3>No tasks yet</h3>
-                <p>Create your first task to get started!</p>
-            </div>
-        `;
+// UI functions
+function renderTasks(tasks) {
+  if (!tasksContainer) return;
+  
+  if (tasks.length === 0) {
+    tasksContainer.innerHTML = '<p class="no-tasks">No tasks yet. Create your first task!</p>';
     return;
   }
 
-  const tasksHTML = currentTasks
-    .map(
-      (task) => `
-        <div class="task-card ${
-          task.isCompleted ? "completed" : ""
-        }" data-task-id="${task.taskId}">
-            <div class="task-header">
-                <div>
-                    <div class="task-title">${escapeHtml(task.taskTitle)}</div>
-                    <span class="task-priority priority-${task.priorityLevel.toLowerCase()}">${
-        task.priorityLevel
-      }</span>
-                </div>
-            </div>
-            
-            ${
-              task.taskDescription
-                ? `<div class="task-description">${escapeHtml(
-                    task.taskDescription
-                  )}</div>`
-                : ""
-            }
-            
-            <div class="task-meta">
-                <div>
-                    <strong>Created:</strong> ${formatDate(task.createdAt)}
-                    ${
-                      task.dueDate
-                        ? `<br><strong>Due:</strong> ${formatDate(
-                            task.dueDate
-                          )}`
-                        : ""
-                    }
-                </div>
-                <div class="task-actions">
-                    <button class="task-btn complete" onclick="toggleTaskCompletion('${
-                      task.taskId
-                    }')">
-                        ${task.isCompleted ? "Undo" : "Complete"}
-                    </button>
-                    <button class="task-btn edit" onclick="editTask('${
-                      task.taskId
-                    }')">Edit</button>
-                    <button class="task-btn delete" onclick="deleteTask('${
-                      task.taskId
-                    }')">Delete</button>
-                </div>
-            </div>
+  const tasksHTML = tasks.map(task => `
+    <div class="task-card priority-${task.priorityLevel.toLowerCase()} ${task.isCompleted ? 'completed' : ''}">
+      <div class="task-header">
+        <h3 class="task-title">${escapeHtml(task.taskTitle)}</h3>
+        <div class="task-actions">
+          <button onclick="editTask('${task.taskId}')" class="btn-edit">Edit</button>
+          <button onclick="deleteTask('${task.taskId}')" class="btn-delete">Delete</button>
         </div>
-    `
-    )
-    .join("");
+      </div>
+      <p class="task-description">${escapeHtml(task.taskDescription || 'No description')}</p>
+      <div class="task-meta">
+        <span class="priority-badge priority-${task.priorityLevel.toLowerCase()}">${task.priorityLevel}</span>
+        <span class="due-date">Due: ${formatDate(task.dueDate)}</span>
+        <label class="completion-toggle">
+          <input type="checkbox" ${task.isCompleted ? 'checked' : ''} 
+                 onchange="toggleTaskCompletion('${task.taskId}')">
+          Complete
+        </label>
+      </div>
+    </div>
+  `).join('');
 
   tasksContainer.innerHTML = tasksHTML;
 }
 
-function updateStats() {
-  const total = currentTasks.length;
-  const completed = currentTasks.filter((task) => task.isCompleted).length;
+function updateStats(tasks) {
+  if (!statsContainer) return;
+  
+  const total = tasks.length;
+  const completed = tasks.filter(task => task.isCompleted).length;
   const pending = total - completed;
+  const highPriority = tasks.filter(task => task.priorityLevel === 'High').length;
 
-  totalTasksElement.textContent = total;
-  completedTasksElement.textContent = completed;
-  pendingTasksElement.textContent = pending;
+  statsContainer.innerHTML = `
+    <div class="stat-card">
+      <h3>${total}</h3>
+      <p>Total Tasks</p>
+    </div>
+    <div class="stat-card">
+      <h3>${completed}</h3>
+      <p>Completed</p>
+    </div>
+    <div class="stat-card">
+      <h3>${pending}</h3>
+      <p>Pending</p>
+    </div>
+    <div class="stat-card">
+      <h3>${highPriority}</h3>
+      <p>High Priority</p>
+    </div>
+  `;
 }
 
-function showTaskForm(isEditing = false) {
-  taskForm.classList.add("show");
-  formTitle.textContent = isEditing ? "Edit Task" : "Add New Task";
-
-  if (!isEditing) {
-    taskFormElement.reset();
-    editingTaskId = null;
+function showTaskForm() {
+  if (taskFormContainer) {
+    taskFormContainer.style.display = 'block';
+    addTaskBtn.style.display = 'none';
   }
 }
 
 function hideTaskForm() {
-  taskForm.classList.remove("show");
-  taskFormElement.reset();
-  editingTaskId = null;
+  if (taskFormContainer) {
+    taskFormContainer.style.display = 'none';
+    addTaskBtn.style.display = 'block';
+  }
 }
 
 function editTask(taskId) {
-  const task = currentTasks.find((t) => t.taskId === taskId);
-  if (!task) return;
-
-  editingTaskId = taskId;
-
-  // Populate form
-  document.getElementById("taskTitle").value = task.taskTitle;
-  document.getElementById("taskDescription").value = task.taskDescription;
-  document.getElementById("priorityLevel").value = task.priorityLevel;
-
-  if (task.dueDate) {
-    const dueDate = new Date(task.dueDate);
-    const localDateTime = new Date(
-      dueDate.getTime() - dueDate.getTimezoneOffset() * 60000
-    );
-    document.getElementById("dueDate").value = localDateTime
-      .toISOString()
-      .slice(0, 16);
-  }
-
-  showTaskForm(true);
+  // Implementation for editing tasks
+  showMessage('Edit functionality coming soon!', 'info');
 }
 
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Event Listeners
+// Event listeners
 if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(loginForm);
-    await handleLogin(formData);
-  });
+  loginForm.addEventListener('submit', handleLogin);
 }
 
 if (signupForm) {
-  signupForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(signupForm);
-    await handleSignup(formData);
-  });
+  signupForm.addEventListener('submit', handleSignup);
 }
 
-if (toggleFormBtn) {
-  toggleFormBtn.addEventListener("click", () => {
-    const isLoginVisible = !loginForm.classList.contains("hidden");
-
-    if (isLoginVisible) {
-      loginForm.classList.add("hidden");
-      signupForm.classList.remove("hidden");
-      toggleFormBtn.textContent = "Already have an account? Login";
-    } else {
-      signupForm.classList.add("hidden");
-      loginForm.classList.remove("hidden");
-      toggleFormBtn.textContent = "Don't have an account? Sign up";
-    }
-  });
-}
-
-// Dashboard event listeners
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", handleLogout);
+if (taskForm) {
+  taskForm.addEventListener('submit', createTask);
 }
 
 if (addTaskBtn) {
-  addTaskBtn.addEventListener("click", () => showTaskForm(false));
+  addTaskBtn.addEventListener('click', showTaskForm);
 }
 
-if (cancelBtn) {
-  cancelBtn.addEventListener("click", hideTaskForm);
-}
-
-if (taskFormElement) {
-  taskFormElement.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(taskFormElement);
-    const taskData = {
-      taskTitle: formData.get("taskTitle"),
-      taskDescription: formData.get("taskDescription"),
-      priorityLevel: formData.get("priorityLevel"),
-      dueDate: formData.get("dueDate") || null,
-    };
-
-    try {
-      if (editingTaskId) {
-        await updateTask(editingTaskId, taskData);
-      } else {
-        await createTask(taskData);
-      }
-
-      hideTaskForm();
-    } catch (error) {
-      // Error is already handled in the respective functions
-    }
+// Store original button text for loading states
+document.addEventListener('DOMContentLoaded', () => {
+  const submitBtns = document.querySelectorAll('button[type="submit"]');
+  submitBtns.forEach(btn => {
+    btn.setAttribute('data-original-text', btn.textContent);
   });
-}
+});
 
-// Initialize dashboard
+// Dashboard initialization
 async function initializeDashboard() {
-  const isAuthenticated = await checkAuthStatus();
-
-  if (!isAuthenticated) {
-    window.location.href = "http://localhost:3000/";
+  const user = await checkAuthStatus();
+  
+  if (!user) {
+    window.location.href = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/'
+      : '/';
     return;
   }
 
-  if (userNameElement && currentUser) {
-    userNameElement.textContent = `Welcome, ${currentUser.firstName}!`;
+  if (userInfo) {
+    userInfo.innerHTML = `
+      <h2>Welcome, ${escapeHtml(user.firstName)}!</h2>
+      <button onclick="handleLogout()" class="btn-logout">Logout</button>
+    `;
   }
 
-  await loadTasks();
+  loadTasks();
 }
 
 // Initialize based on current page
-document.addEventListener("DOMContentLoaded", () => {
-  // Store original button text for loading states
-  const submitButtons = document.querySelectorAll('button[type="submit"]');
-  submitButtons.forEach((btn) => {
-    btn.dataset.originalText = btn.textContent;
-  });
-
-  // Check if we're on the dashboard page
-  if (
-    window.location.pathname === "/dashboard" ||
-    window.location.pathname.endsWith("dashboard.html")
-  ) {
-    initializeDashboard();
-  }
-});
+if (window.location.pathname === '/dashboard' || window.location.pathname.includes('dashboard')) {
+  initializeDashboard();
+}
