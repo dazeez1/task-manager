@@ -6,6 +6,10 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || "development";
+
+console.log(`🌍 Environment: ${NODE_ENV}`);
+console.log(`🔗 Port: ${PORT}`);
 
 // Body parser middleware
 app.use(bodyParser.json());
@@ -27,7 +31,7 @@ app.use(
       secure: process.env.NODE_ENV === "production", // true in production
       httpOnly: true, // Prevent XSS attacks
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none for cross-origin in production
       path: "/",
     },
     rolling: true, // Reset expiration on every request
@@ -36,12 +40,27 @@ app.use(
 
 // CORS middleware - AFTER session middleware
 app.use((req, res, next) => {
-  const allowedOrigin =
-    process.env.NODE_ENV === "production"
-      ? "https://task-manager-rho-virid.vercel.app"
-      : "http://localhost:8000";
+  // Get the origin from the request headers
+  const origin = req.headers.origin;
 
-  res.header("Access-Control-Allow-Origin", allowedOrigin);
+  // Define allowed origins
+  const allowedOrigins = [
+    "https://task-manager-rho-virid.vercel.app", // Production frontend
+    "http://localhost:8000", // Development frontend
+    "http://localhost:3000", // Alternative development port
+  ];
+
+  // Check if the request origin is allowed
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    // Default to production origin if no valid origin found
+    res.header(
+      "Access-Control-Allow-Origin",
+      "https://task-manager-rho-virid.vercel.app"
+    );
+  }
+
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -236,7 +255,9 @@ app.get("/api/tasks", (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${NODE_ENV}`);
   console.log(`🔗 API URL: http://localhost:${PORT}/api`);
   console.log(`🔐 Session store: FileStore`);
   console.log(`🍪 Cookie name: task-manager-session`);
+  console.log(`🌐 CORS: Dynamic origin handling enabled`);
 });
