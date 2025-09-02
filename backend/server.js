@@ -105,6 +105,61 @@ app.get("/api/test-session", (req, res) => {
   });
 });
 
+// Debug endpoint to check user data
+app.get("/api/debug-users", (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+
+    const usersFilePath = path.join(__dirname, "users.json");
+    console.log("🔍 DEBUG: Reading users from:", usersFilePath);
+
+    if (!fs.existsSync(usersFilePath)) {
+      return res.json({
+        error: "Users file not found",
+        path: usersFilePath,
+        exists: false,
+      });
+    }
+
+    const fileContent = fs.readFileSync(usersFilePath, "utf8");
+    console.log("🔍 DEBUG: File content length:", fileContent.length);
+
+    const users = JSON.parse(fileContent);
+    console.log("🔍 DEBUG: Parsed users count:", users.length);
+
+    // Show first user (without password) for debugging
+    const firstUser = users[0]
+      ? {
+          userId: users[0].userId,
+          firstName: users[0].firstName,
+          lastName: users[0].lastName,
+          emailAddress: users[0].emailAddress,
+          createdAt: users[0].createdAt,
+          hasPassword: !!users[0].password,
+        }
+      : null;
+
+    res.json({
+      message: "User data debug",
+      timestamp: new Date().toISOString(),
+      filePath: usersFilePath,
+      fileExists: true,
+      fileSize: fileContent.length,
+      usersCount: users.length,
+      firstUser: firstUser,
+      allEmails: users.map((u) => u.emailAddress),
+    });
+  } catch (error) {
+    console.error("🔍 DEBUG ERROR:", error);
+    res.status(500).json({
+      error: "Failed to read user data",
+      message: error.message,
+      stack: error.stack,
+    });
+  }
+});
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
@@ -177,6 +232,8 @@ app.get("/", (req, res) => {
       health: "/health",
       testCors: "/api/test-cors",
       testSession: "/api/test-session",
+      debugUsers: "/api/debug-users",
+      createTestUser: "/api/create-test-user",
     },
     documentation: "https://github.com/dazeez1/task-manager",
     cors: {
@@ -186,12 +243,100 @@ app.get("/", (req, res) => {
   });
 });
 
+// Create test user for production
+app.post("/api/create-test-user", (req, res) => {
+  try {
+    const bcrypt = require("bcryptjs");
+    const { v4: uuidv4 } = require("uuid");
+
+    console.log("🔧 Creating test user for production...");
+
+    // Create a test user with known credentials
+    const testUser = {
+      userId: uuidv4(),
+      firstName: "Test",
+      lastName: "User",
+      emailAddress: "test@example.com",
+      password: bcrypt.hashSync("password123", 10),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Read existing users or create new array
+    const fs = require("fs");
+    const path = require("path");
+    const usersFilePath = path.join(__dirname, "users.json");
+
+    let users = [];
+    if (fs.existsSync(usersFilePath)) {
+      try {
+        const fileContent = fs.readFileSync(usersFilePath, "utf8");
+        if (fileContent && fileContent.trim()) {
+          users = JSON.parse(fileContent);
+        }
+      } catch (error) {
+        console.log("🔧 Error reading existing users, starting fresh");
+      }
+    }
+
+    // Check if test user already exists
+    const existingUser = users.find(
+      (u) => u.emailAddress === testUser.emailAddress
+    );
+    if (existingUser) {
+      return res.json({
+        message: "Test user already exists",
+        user: {
+          userId: existingUser.userId,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          emailAddress: existingUser.emailAddress,
+          createdAt: existingUser.createdAt,
+        },
+      });
+    }
+
+    // Add test user
+    users.push(testUser);
+    fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
+
+    console.log("🔧 Test user created successfully");
+
+    res.json({
+      message: "Test user created successfully",
+      user: {
+        userId: testUser.userId,
+        firstName: testUser.firstName,
+        lastName: testUser.lastName,
+        emailAddress: testUser.emailAddress,
+        createdAt: testUser.createdAt,
+      },
+      credentials: {
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+  } catch (error) {
+    console.error("🔧 Error creating test user:", error);
+    res.status(500).json({
+      error: "Failed to create test user",
+      message: error.message,
+    });
+  }
+});
+
 // 404 handler for API routes
 app.use("/api/*", (req, res) => {
   res.status(404).json({
     error: "API endpoint not found",
     path: req.originalUrl,
-    availableEndpoints: ["/api/auth", "/api/tasks", "/api/test-cors"],
+    availableEndpoints: [
+      "/api/auth",
+      "/api/tasks",
+      "/api/test-cors",
+      "/api/test-session",
+      "/api/debug-users",
+      "/api/create-test-user",
+    ],
   });
 });
 
