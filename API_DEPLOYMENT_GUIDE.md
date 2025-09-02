@@ -17,6 +17,21 @@ This guide will help you deploy **both the backend API and frontend** to Render 
 - ✅ Render account (free tier available)
 - ✅ All code committed and pushed to GitHub
 
+## 🌐 **Your Current Deployment**
+
+### ✅ **Live Services:**
+
+| Service | Type | Purpose | URL |
+|---------|------|---------|-----|
+| `task-manager-api` | Web Service | Backend API | [https://task-manager-2ejf.onrender.com](https://task-manager-2ejf.onrender.com) |
+| `task-manager-frontend` | Static Site | Frontend UI | [https://task-manager-rho-virid.vercel.app](https://task-manager-rho-virid.vercel.app) |
+
+### 🔗 **API Endpoints:**
+- **API Base**: `https://task-manager-2ejf.onrender.com/api`
+- **Health Check**: `https://task-manager-2ejf.onrender.com/health`
+- **Authentication**: `https://task-manager-2ejf.onrender.com/api/auth/*`
+- **Tasks**: `https://task-manager-2ejf.onrender.com/api/tasks/*`
+
 ## 🌐 **Deploy to Render (2 Services)**
 
 ### Step 1: Deploy Both Services to Render
@@ -44,10 +59,10 @@ This guide will help you deploy **both the backend API and frontend** to Render 
 
 ```bash
 # Test API
-curl https://task-manager-api.onrender.com/health
+curl https://task-manager-2ejf.onrender.com/health
 
 # Test Frontend
-curl https://task-manager-frontend.onrender.com/
+curl https://task-manager-rho-virid.vercel.app/
 ```
 
 ## 🔧 **Configuration Details**
@@ -71,7 +86,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: "*"
+        value: "https://task-manager-rho-virid.vercel.app"
     healthCheckPath: /health
     autoDeploy: true
 
@@ -94,8 +109,8 @@ services:
 
 | Service | Type | Purpose | URL |
 |---------|------|---------|-----|
-| `task-manager-api` | Web Service | Backend API | `https://task-manager-api.onrender.com` |
-| `task-manager-frontend` | Static Site | Frontend UI | `https://task-manager-frontend.onrender.com` |
+| `task-manager-api` | Web Service | Backend API | `https://task-manager-2ejf.onrender.com` |
+| `task-manager-frontend` | Static Site | Frontend UI | `https://task-manager-rho-virid.vercel.app` |
 
 ## 📱 **Frontend Configuration**
 
@@ -107,7 +122,7 @@ Your frontend automatically detects the environment:
 // Auto-detects localhost vs production
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
-  : 'https://task-manager-api.onrender.com/api';
+  : 'https://task-manager-2ejf.onrender.com/api';
 ```
 
 ### Update Frontend for Production
@@ -116,14 +131,14 @@ If you want to hardcode the production API URL:
 
 ```javascript
 // In your frontend script.js
-const API_BASE_URL = 'https://task-manager-api.onrender.com/api';
+const API_BASE_URL = 'https://task-manager-2ejf.onrender.com/api';
 ```
 
 ## 🧪 **Testing Your Complete Deployment**
 
 ### 1. API Health Check
 ```bash
-curl https://task-manager-api.onrender.com/health
+curl https://task-manager-2ejf.onrender.com/health
 ```
 
 **Expected Response:**
@@ -138,26 +153,26 @@ curl https://task-manager-api.onrender.com/health
 ```
 
 ### 2. Frontend Access
-- **Main App**: `https://task-manager-frontend.onrender.com/`
-- **Dashboard**: `https://task-manager-frontend.onrender.com/dashboard`
+- **Main App**: [https://task-manager-rho-virid.vercel.app/](https://task-manager-rho-virid.vercel.app/)
+- **Dashboard**: [https://task-manager-rho-virid.vercel.app/dashboard](https://task-manager-rho-virid.vercel.app/dashboard)
 
 ### 3. Complete User Flow
-1. **Visit Frontend**: `https://task-manager-frontend.onrender.com/`
-2. **Sign Up/Login**: Uses API at `https://task-manager-api.onrender.com/api/auth/*`
-3. **Manage Tasks**: Uses API at `https://task-manager-api.onrender.com/api/tasks/*`
+1. **Visit Frontend**: [https://task-manager-rho-virid.vercel.app/](https://task-manager-rho-virid.vercel.app/)
+2. **Sign Up/Login**: Uses API at `https://task-manager-2ejf.onrender.com/api/auth/*`
+3. **Manage Tasks**: Uses API at `https://task-manager-2ejf.onrender.com/api/tasks/*`
 
 ## 🔒 **Security Features**
 
 ### Production Security
 - ✅ **Secure Cookies**: HTTPS-only in production
 - ✅ **Session Security**: HttpOnly, secure flags
-- ✅ **CORS**: Configurable origins
+- ✅ **CORS**: Restricted to your frontend domain
 - ✅ **Environment Variables**: Secure configuration
 - ✅ **Separate Services**: API and frontend isolated
 
 ### CORS Configuration
 - **Development**: Restricted to localhost
-- **Production**: Allows all origins (`*`) for API access
+- **Production**: Restricted to `https://task-manager-rho-virid.vercel.app`
 
 ## 📊 **Monitoring & Maintenance**
 
@@ -245,9 +260,9 @@ curl https://task-manager-api.onrender.com/health
 
 ### URLs to Share:
 
-- **Complete App**: `https://task-manager-frontend.onrender.com`
-- **API Documentation**: `https://task-manager-api.onrender.com/`
-- **Health Check**: `https://task-manager-api.onrender.com/health`
+- **Complete App**: [https://task-manager-rho-virid.vercel.app](https://task-manager-rho-virid.vercel.app)
+- **API Documentation**: [https://task-manager-2ejf.onrender.com/](https://task-manager-2ejf.onrender.com/)
+- **Health Check**: [https://task-manager-2ejf.onrender.com/health](https://task-manager-2ejf.onrender.com/health)
 
 ## 📞 **Support & Resources**
 
@@ -262,8 +277,8 @@ curl https://task-manager-api.onrender.com/health
 
 Your complete Task Manager application is now live on Render with both backend and frontend!
 
-**Frontend**: `https://task-manager-frontend.onrender.com`
-**API**: `https://task-manager-api.onrender.com`
-**Complete App**: `https://task-manager-frontend.onrender.com`
+**Frontend**: [https://task-manager-rho-virid.vercel.app](https://task-manager-rho-virid.vercel.app)
+**API**: [https://task-manager-2ejf.onrender.com](https://task-manager-2ejf.onrender.com)
+**Complete App**: [https://task-manager-rho-virid.vercel.app](https://task-manager-rho-virid.vercel.app)
 
 **Your app is now accessible worldwide!** 🌍✨

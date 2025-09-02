@@ -13,7 +13,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: "*"
+        value: "https://task-manager-rho-virid.vercel.app"
     healthCheckPath: /health
     autoDeploy: true
 

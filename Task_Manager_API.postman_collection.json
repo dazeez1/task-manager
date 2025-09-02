@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "task-manager-api-collection",
 		"name": "Task Manager API",
-		"description": "Complete API collection for the Task Manager backend API. This collection tests the API endpoints that will be hosted on Render. Frontend pages are hosted separately.",
+		"description": "Complete API collection for the Task Manager backend API. This collection tests the API endpoints hosted at https://task-manager-2ejf.onrender.com. Frontend is hosted at https://task-manager-rho-virid.vercel.app",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "task-manager-api"
 	},
@@ -311,7 +311,9 @@
 					"// Log current environment",
 					"console.log('🌍 Testing against:', pm.environment.get('baseUrl'));",
 					"console.log('🔗 Environment:', pm.environment.name);",
-					"console.log('📚 Note: This collection tests the API only. Frontend is hosted separately.');"
+					"console.log('📚 Note: This collection tests the API only. Frontend is hosted separately.');",
+					"console.log('🌐 Production API: https://task-manager-2ejf.onrender.com');",
+					"console.log('🎨 Production Frontend: https://task-manager-rho-virid.vercel.app');"
 				]
 			}
 		}
