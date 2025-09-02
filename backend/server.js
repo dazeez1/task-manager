@@ -14,18 +14,15 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'task-manager-secret-key-2024';
 
-// CORS configuration - properly configured for production
+// SIMPLE BUT EFFECTIVE CORS Configuration
 const corsOptions = {
-  origin: isProduction 
-    ? ['https://task-manager-rho-virid.vercel.app', 'http://localhost:3000', 'http://localhost:5500']
-    : ['http://localhost:3000', 'http://localhost:5500', 'http://127.0.0.1:3000', 'http://127.0.0.1:5500'],
+  origin: ['https://task-manager-rho-virid.vercel.app', 'http://localhost:3000', 'http://localhost:5500'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-  preflightContinue: false,
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept']
 };
 
+// Apply CORS FIRST - before any other middleware
 app.use(cors(corsOptions));
 
 // Handle preflight requests
@@ -42,15 +39,29 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction, // Use secure cookies in production
+      secure: isProduction,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
       sameSite: isProduction ? 'none' : 'lax'
     }
   })
 );
 
-// API routes only
+// Test endpoint to verify CORS
+app.get('/api/test-cors', (req, res) => {
+  res.json({
+    message: 'CORS test successful!',
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin,
+    method: req.method,
+    cors: {
+      allowedOrigins: corsOptions.origin,
+      credentials: corsOptions.credentials
+    }
+  });
+});
+
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
@@ -77,7 +88,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       tasks: '/api/tasks',
-      health: '/health'
+      health: '/health',
+      testCors: '/api/test-cors'
     },
     documentation: 'https://github.com/dazeez1/task-manager',
     cors: {
@@ -92,7 +104,7 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     error: 'API endpoint not found',
     path: req.originalUrl,
-    availableEndpoints: ['/api/auth', '/api/tasks']
+    availableEndpoints: ['/api/auth', '/api/tasks', '/api/test-cors']
   });
 });
 

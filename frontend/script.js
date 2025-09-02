@@ -148,8 +148,7 @@ async function handleSignup(event) {
 
     // Switch to login form
     setTimeout(() => {
-      document.getElementById("signupSection").style.display = "none";
-      document.getElementById("loginSection").style.display = "block";
+      toggleForms();
     }, 1000);
   } catch (error) {
     showMessage(error.message, "error");
