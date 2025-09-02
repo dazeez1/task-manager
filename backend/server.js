@@ -50,15 +50,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   session({
     secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Force save on every request for cross-origin
+    saveUninitialized: true, // Save uninitialized sessions for cross-origin
+    name: "task-manager-session", // Custom session name
     cookie: {
-      secure: false, // Set to false for cross-origin requests
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: false, // Must be false for HTTP (Render uses HTTP internally)
+      httpOnly: false, // Allow JavaScript access for cross-origin
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "none", // Required for cross-origin requests
-      domain: undefined, // Let the browser handle domain
+      domain: undefined, // Let browser handle domain
+      path: "/", // Ensure cookie is sent to all paths
     },
+    rolling: true, // Extend session on every request
   })
 );
 
@@ -67,6 +70,11 @@ app.use((req, res, next) => {
   console.log(`🔐 Session Debug - ID: ${req.sessionID}`);
   console.log(`🔐 Session Data:`, req.session);
   console.log(`🔐 Session Cookie:`, req.headers.cookie);
+
+  // Ensure proper headers for cross-origin cookies
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+
   next();
 });
 
@@ -102,6 +110,24 @@ app.get("/api/test-session", (req, res) => {
     sessionData: req.session,
     cookies: req.headers.cookie || "No cookies",
     testValueSet: req.session.testValue,
+  });
+});
+
+// Simple session test endpoint
+app.get("/api/session-test", (req, res) => {
+  // Set a user ID in session
+  req.session.userId = "test-user-" + Date.now();
+  req.session.email = "test@example.com";
+
+  console.log("🔐 SESSION TEST: Set userId:", req.session.userId);
+  console.log("🔐 SESSION TEST: Session data:", req.session);
+
+  res.json({
+    message: "Session test - userId set",
+    sessionId: req.sessionID,
+    userId: req.session.userId,
+    sessionData: req.session,
+    cookies: req.headers.cookie || "No cookies",
   });
 });
 
