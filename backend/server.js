@@ -17,14 +17,26 @@ const sessionSecret =
 
 // SIMPLE BUT EFFECTIVE CORS Configuration
 const corsOptions = {
-  origin: [
-    "https://task-manager-rho-virid.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:5500",
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "https://task-manager-rho-virid.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:5500",
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept", "Cookie"],
+  exposedHeaders: ["Set-Cookie"],
 };
 
 // Apply CORS FIRST - before any other middleware
@@ -32,6 +44,18 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests
 app.options("*", cors(corsOptions));
+
+// Cookie middleware - ensure cookies are properly set
+app.use((req, res, next) => {
+  // Set cookie headers for cross-origin
+  res.header("Access-Control-Allow-Credentials", "true");
+  
+  // Log cookie information
+  console.log(`🍪 Request Cookies: ${req.headers.cookie || "None"}`);
+  console.log(`🍪 Response Headers:`, res.getHeaders());
+  
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -62,6 +86,7 @@ app.use(
       path: "/", // Ensure cookie is sent to all paths
     },
     rolling: true, // Extend session on every request
+    store: undefined, // Use default memory store
   })
 );
 
@@ -70,11 +95,6 @@ app.use((req, res, next) => {
   console.log(`🔐 Session Debug - ID: ${req.sessionID}`);
   console.log(`🔐 Session Data:`, req.session);
   console.log(`🔐 Session Cookie:`, req.headers.cookie);
-
-  // Ensure proper headers for cross-origin cookies
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-
   next();
 });
 
@@ -122,12 +142,24 @@ app.get("/api/session-test", (req, res) => {
   console.log("🔐 SESSION TEST: Set userId:", req.session.userId);
   console.log("🔐 SESSION TEST: Session data:", req.session);
 
-  res.json({
-    message: "Session test - userId set",
-    sessionId: req.sessionID,
-    userId: req.session.userId,
-    sessionData: req.session,
-    cookies: req.headers.cookie || "No cookies",
+  // Force session save
+  req.session.save((err) => {
+    if (err) {
+      console.error("❌ Session save error:", err);
+      return res.status(500).json({ error: "Failed to save session" });
+    }
+    
+    console.log("✅ Session saved successfully");
+    console.log("🍪 Session cookie should be set");
+    
+    res.json({
+      message: "Session test - userId set",
+      sessionId: req.sessionID,
+      userId: req.session.userId,
+      sessionData: req.session,
+      cookies: req.headers.cookie || "No cookies",
+      sessionSaved: true,
+    });
   });
 });
 
