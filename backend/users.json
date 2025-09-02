@@ -46,5 +46,13 @@
     "emailAddress": "drey@gmail.com",
     "password": "$2a$10$AfOrpICidT2ory//DRUhkuA.mODQuODiR5UVyS/riE6KnZk3.5rzu",
     "createdAt": "2025-08-26T23:24:23.532Z"
+  },
+  {
+    "userId": "6bc09d72-01f1-4506-982b-bbbd77df62e1",
+    "firstName": "Test2",
+    "lastName": "User",
+    "emailAddress": "test2@example.com",
+    "password": "$2a$10$LkFRIaz4kHMVVu1rvuJ7EesTQKYvspDTITJUdFJ8SYfiGv2BJAlAq",
+    "createdAt": "2025-09-02T13:53:36.192Z"
   }
 ]
