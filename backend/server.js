@@ -14,15 +14,22 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'task-manager-secret-key-2024';
 
-// CORS configuration - allow all origins for API-only deployment
+// CORS configuration - properly configured for production
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN === "*" ? true : process.env.CORS_ORIGIN,
+  origin: isProduction 
+    ? ['https://task-manager-rho-virid.vercel.app', 'http://localhost:3000', 'http://localhost:5500']
+    : ['http://localhost:3000', 'http://localhost:5500', 'http://127.0.0.1:3000', 'http://127.0.0.1:5500'],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Body parser middleware
 app.use(bodyParser.json());
@@ -54,7 +61,11 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     service: 'Task Manager API',
-    version: '2.0.0'
+    version: '2.0.0',
+    cors: {
+      allowedOrigins: corsOptions.origin,
+      credentials: corsOptions.credentials
+    }
   });
 });
 
@@ -68,7 +79,11 @@ app.get('/', (req, res) => {
       tasks: '/api/tasks',
       health: '/health'
     },
-    documentation: 'https://github.com/dazeez1/task-manager'
+    documentation: 'https://github.com/dazeez1/task-manager',
+    cors: {
+      allowedOrigins: corsOptions.origin,
+      credentials: corsOptions.credentials
+    }
   });
 });
 
@@ -94,6 +109,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Task Manager API Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🌐 CORS Origins: ${corsOptions.origin.join(', ')}`);
   if (isProduction) {
     console.log(`🚀 Production mode enabled`);
     console.log(`📚 API-only deployment - no frontend files served`);
