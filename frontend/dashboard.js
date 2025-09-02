@@ -63,9 +63,12 @@ function setLoading(loading) {
 // API request helper
 async function makeApiRequest(url, options = {}) {
   try {
+    console.log(`🌐 Making API request to: ${url}`);
+    console.log(`🍪 Including credentials for session management`);
+
     const response = await fetch(url, {
       ...options,
-      credentials: "include",
+      credentials: "include", // CRITICAL: Include cookies for session
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
