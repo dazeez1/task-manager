@@ -1,6 +1,5 @@
 const express = require("express");
 const session = require("express-session");
-const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 
@@ -8,28 +7,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
-// Simple CORS configuration
-app.use(cors({
-  origin: "https://task-manager-rho-virid.vercel.app",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept", "Cookie"],
-}));
-
 // Body parser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Simple session configuration
+// Simple session configuration - NO CORS
 app.use(session({
   secret: process.env.SESSION_SECRET || "your-secret-key",
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: {
     secure: false,
     httpOnly: false,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: "none",
+    sameSite: "lax",
     path: "/"
   }
 }));
