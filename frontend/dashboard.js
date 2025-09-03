@@ -1,5 +1,8 @@
 // Dashboard-specific JavaScript
-const API_BASE_URL = "https://task-manager-2ejf.onrender.com/api";
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000/api" // Development
+    : "https://task-manager-2ejf.onrender.com/api"; // Production (Backend)
 
 console.log("Dashboard.js loaded!");
 
@@ -65,6 +68,7 @@ async function makeApiRequest(url, options = {}) {
   try {
     console.log(`🌐 Making API request to: ${url}`);
     console.log(`🍪 Including credentials for session management`);
+    console.log(`🍪 Cookies being sent:`, document.cookie);
 
     const response = await fetch(url, {
       ...options,
@@ -111,9 +115,15 @@ async function makeApiRequest(url, options = {}) {
 // Authentication functions
 async function checkAuthStatus() {
   try {
+    console.log("🔍 Checking authentication status...");
+    console.log("🌐 API URL:", `${API_BASE_URL}/auth/me`);
+    console.log("🍪 Current cookies:", document.cookie);
+
     const response = await makeApiRequest(`${API_BASE_URL}/auth/me`);
+    console.log("✅ Auth check response:", response);
     return response.data;
   } catch (error) {
+    console.error("❌ Auth check failed:", error);
     return null;
   }
 }

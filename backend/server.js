@@ -8,8 +8,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
+// Better environment detection for production
+const isProduction = NODE_ENV === "production" || 
+                    process.env.PORT || 
+                    process.env.RENDER || 
+                    process.env.VERCEL;
+
 console.log(`🌍 Environment: ${NODE_ENV}`);
 console.log(`🔗 Port: ${PORT}`);
+console.log(`🚀 Production mode: ${isProduction}`);
 
 // Body parser middleware
 app.use(bodyParser.json());
@@ -42,11 +49,12 @@ app.use(
     saveUninitialized: false, // Don't create session until something stored
     name: "task-manager-session",
     cookie: {
-      secure: process.env.NODE_ENV === "production", // true in production
+      secure: isProduction, // true in production (HTTPS required)
       httpOnly: true, // Prevent XSS attacks
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none for cross-origin in production
+      sameSite: isProduction ? "none" : "lax", // none for cross-origin in production
       path: "/",
+      domain: isProduction ? undefined : undefined, // Let browser set domain for cross-origin
     },
     rolling: true, // Reset expiration on every request
   })
@@ -56,6 +64,10 @@ app.use(
 app.use((req, res, next) => {
   // Get the origin from the request headers
   const origin = req.headers.origin;
+  
+  console.log(`🌐 CORS Request - Origin: ${origin}`);
+  console.log(`🌐 CORS Request - Method: ${req.method}`);
+  console.log(`🌐 CORS Request - Path: ${req.path}`);
 
   // Define allowed origins
   const allowedOrigins = [
@@ -67,12 +79,14 @@ app.use((req, res, next) => {
   // Check if the request origin is allowed
   if (origin && allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
+    console.log(`✅ CORS: Allowed origin ${origin}`);
   } else {
     // Default to production origin if no valid origin found
     res.header(
       "Access-Control-Allow-Origin",
       "https://task-manager-rho-virid.vercel.app"
     );
+    console.log(`⚠️ CORS: No valid origin, defaulting to production`);
   }
 
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -80,6 +94,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
+    console.log(`🔄 CORS: Preflight request handled`);
     res.sendStatus(200);
     return;
   }
@@ -152,6 +167,27 @@ app.get("/api/session-test", async (req, res) => {
       details: error.message,
     });
   }
+});
+
+// Production session debugging endpoint
+app.get("/api/production-debug", (req, res) => {
+  const debugInfo = {
+    environment: NODE_ENV,
+    isProduction: isProduction,
+    sessionId: req.sessionID,
+    cookies: req.headers.cookie,
+    origin: req.headers.origin,
+    userAgent: req.headers['user-agent'],
+    sessionData: req.session,
+    timestamp: new Date().toISOString()
+  };
+  
+  console.log("🔍 Production Debug Info:", debugInfo);
+  
+  res.json({
+    message: "Production debug information",
+    debug: debugInfo
+  });
 });
 
 // Authentication routes
