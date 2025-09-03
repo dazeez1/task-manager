@@ -16,15 +16,29 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Session configuration - MUST come before CORS
+const sessionStore = new FileStore({
+  path: path.join(__dirname, "sessions"),
+  ttl: 24 * 60 * 60, // 24 hours in seconds
+  reapInterval: 60 * 60, // Clean up expired sessions every hour
+  retries: 3, // Retry failed operations
+  secret: process.env.SESSION_SECRET || "your-secret-key-2024",
+  logFn: (message) => console.log(`📁 FileStore: ${message}`),
+});
+
+// Handle FileStore errors
+sessionStore.on("error", (error) => {
+  console.error("❌ FileStore error:", error);
+});
+
+sessionStore.on("connect", () => {
+  console.log("✅ FileStore connected successfully");
+});
+
 app.use(
   session({
-    store: new FileStore({
-      path: path.join(__dirname, "sessions"),
-      ttl: 24 * 60 * 60, // 24 hours in seconds
-      reapInterval: 60 * 60, // Clean up expired sessions every hour
-    }),
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || "your-secret-key-2024",
-    resave: false, // Don't save session if unmodified
+    resave: true, // Force save on every request to ensure persistence
     saveUninitialized: false, // Don't create session until something stored
     name: "task-manager-session",
     cookie: {
@@ -76,7 +90,12 @@ app.use((req, res, next) => {
 // Session debugging middleware
 app.use((req, res, next) => {
   console.log(`🔍 [${req.method}] ${req.path} - Session ID: ${req.sessionID}`);
+  console.log(`🔍 Cookies:`, req.headers.cookie);
   console.log(`🔍 Session data:`, req.session);
+  console.log(
+    `🔍 Session store:`,
+    req.sessionStore ? "FileStore" : "MemoryStore"
+  );
   next();
 });
 
@@ -98,6 +117,41 @@ app.get("/api/test", (req, res) => {
     sessionData: req.session,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Session store test endpoint
+app.get("/api/session-test", async (req, res) => {
+  try {
+    const sessionId = req.sessionID;
+    console.log(`🧪 Testing session store for ID: ${sessionId}`);
+
+    // Try to get session from store
+    sessionStore.get(sessionId, (err, session) => {
+      if (err) {
+        console.error("❌ Session store get error:", err);
+        return res.json({
+          error: "Session store get failed",
+          details: err.message,
+          sessionId: sessionId,
+        });
+      }
+
+      console.log("✅ Session retrieved from store:", session);
+      res.json({
+        message: "Session store test",
+        sessionId: sessionId,
+        sessionFromStore: session,
+        currentSession: req.session,
+        storeWorking: !!session,
+      });
+    });
+  } catch (error) {
+    console.error("❌ Session test error:", error);
+    res.status(500).json({
+      error: "Session test failed",
+      details: error.message,
+    });
+  }
 });
 
 // Authentication routes
