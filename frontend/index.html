@@ -4,204 +4,53 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Task Manager - Login</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        width: 100%;
-        max-width: 400px;
-        margin: 20px;
-      }
-
-      .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        text-align: center;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-        margin-bottom: 10px;
-      }
-
-      .header p {
-        opacity: 0.9;
-        font-size: 0.9rem;
-      }
-
-      .form-container {
-        padding: 40px 30px;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        color: #333;
-        font-weight: 500;
-      }
-
-      .form-group input {
-        width: 100%;
-        padding: 12px 15px;
-        border: 2px solid #e1e5e9;
-        border-radius: 10px;
-        font-size: 16px;
-        transition: border-color 0.3s ease;
-      }
-
-      .form-group input:focus {
-        outline: none;
-        border-color: #667eea;
-      }
-
-      .btn {
-        width: 100%;
-        padding: 15px;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-bottom: 15px;
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-      }
-
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-      }
-
-      .btn-secondary {
-        background: #f8f9fa;
-        color: #667eea;
-        border: 2px solid #667eea;
-      }
-
-      .btn-secondary:hover {
-        background: #667eea;
-        color: white;
-      }
-
-      .toggle-form {
-        text-align: center;
-        margin-top: 20px;
-      }
-
-      .toggle-form button {
-        background: none;
-        border: none;
-        color: #667eea;
-        cursor: pointer;
-        font-size: 14px;
-        text-decoration: underline;
-      }
-
-      .toggle-form button:hover {
-        color: #764ba2;
-      }
-
-      .error-message {
-        background: #fee;
-        color: #c33;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: none;
-      }
-
-      .success-message {
-        background: #efe;
-        color: #3c3;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        display: none;
-      }
-
-      .loading {
-        opacity: 0.7;
-        pointer-events: none;
-      }
-
-      .loading .btn {
-        position: relative;
-      }
-
-      .loading .btn::after {
-        content: "";
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        top: 50%;
-        left: 50%;
-        margin-left: -10px;
-        margin-top: -10px;
-        border: 2px solid transparent;
-        border-top: 2px solid currentColor;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      .hidden {
-        display: none;
-      }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
   </head>
   <body>
     <div class="container">
-      <div class="header">
-        <h1>Task Manager</h1>
-        <p>Organize your life, one task at a time</p>
-      </div>
+      <div class="auth-container">
+        <div class="auth-header">
+          <div class="logo">
+            <i class="fas fa-tasks"></i>
+            <h1>Task Manager</h1>
+          </div>
+          <p>Organize your life, one task at a time</p>
+        </div>
 
-      <div class="form-container">
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
+        <div class="auth-tabs">
+          <button class="tab-btn active" data-tab="login">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+          <button class="tab-btn" data-tab="signup">
+            <i class="fas fa-user-plus"></i>
+            Sign Up
+          </button>
+        </div>
 
         <!-- Login Form -->
-        <form id="loginForm">
+        <form id="loginForm" class="auth-form active">
           <div class="form-group">
-            <label for="loginEmail">Email Address</label>
+            <label for="loginEmail">
+              <i class="fas fa-envelope"></i>
+              Email Address
+            </label>
             <input type="email" id="loginEmail" name="emailAddress" required />
           </div>
+
           <div class="form-group">
-            <label for="loginPassword">Password</label>
+            <label for="loginPassword">
+              <i class="fas fa-lock"></i>
+              Password
+            </label>
             <input
               type="password"
               id="loginPassword"
@@ -209,44 +58,83 @@
               required
             />
           </div>
-          <button type="submit" class="btn btn-primary">Login</button>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
         </form>
 
         <!-- Signup Form -->
-        <form id="signupForm" class="hidden">
+        <form id="signupForm" class="auth-form">
           <div class="form-group">
-            <label for="signupFirstName">First Name</label>
+            <label for="signupFirstName">
+              <i class="fas fa-user"></i>
+              First Name
+            </label>
             <input type="text" id="signupFirstName" name="firstName" required />
           </div>
+
           <div class="form-group">
-            <label for="signupLastName">Last Name</label>
+            <label for="signupLastName">
+              <i class="fas fa-user"></i>
+              Last Name
+            </label>
             <input type="text" id="signupLastName" name="lastName" required />
           </div>
+
           <div class="form-group">
-            <label for="signupEmail">Email Address</label>
+            <label for="signupEmail">
+              <i class="fas fa-envelope"></i>
+              Email Address
+            </label>
             <input type="email" id="signupEmail" name="emailAddress" required />
           </div>
+
           <div class="form-group">
-            <label for="signupPassword">Password</label>
+            <label for="signupPassword">
+              <i class="fas fa-lock"></i>
+              Password
+            </label>
             <input
               type="password"
               id="signupPassword"
               name="password"
               required
-              minlength="6"
             />
           </div>
-          <button type="submit" class="btn btn-primary">Sign Up</button>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i>
+            Create Account
+          </button>
         </form>
 
-        <div class="toggle-form">
-          <button type="button" id="toggleFormBtn">
-            Don't have an account? Sign up
-          </button>
+        <div class="auth-footer">
+          <p>Secure authentication powered by sessions</p>
         </div>
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Processing...</p>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="notification-toast hidden">
+      <div class="toast-content">
+        <i class="toast-icon"></i>
+        <span class="toast-message"></span>
+      </div>
+      <button class="toast-close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <script src="js/auth.js"></script>
   </body>
 </html>
